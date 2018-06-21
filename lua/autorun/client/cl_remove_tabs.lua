@@ -24,7 +24,7 @@ hook.Remove("OnSpawnMenuOpen", "cfcSpawnMenuWhitelist")
 hook.Add( "OnSpawnMenuOpen", "cfcSpawnMenuWhitelist", cfcCheckTabs)
 
 -- This extra pass ensures that all tabs are removed.
--- The Saves tab seems to be loaded in async so it doesn't disappear until the second menu load
+-- The Saves tab seems to be loaded in async so it wouldn't disappear until the second menu load
 hook.Remove("OnSpawnMenuOpen", "cfcSpawnMenuWhitelist-delayed")
 hook.Add( "OnSpawnMenuOpen", "cfcSpawnMenuWhitelist-delayed", function()
 	timer.Simple(0, cfcCheckTabs)
