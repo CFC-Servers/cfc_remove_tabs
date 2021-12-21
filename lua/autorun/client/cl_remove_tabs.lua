@@ -7,11 +7,6 @@ local disabledTabs = {
     ["#spawnmenu.category.npcs"] = true
 }
 
-local function shouldHide( tab )
-    if LocalPlayer():IsAdmin() then return false end
-    return disabledTabs[tab.Name]
-end
-
 local function hide( item )
     local tab = item.Tab
     tab:SetEnabled( false )
@@ -38,7 +33,7 @@ end
 
 hook.Add( "OnSpawnMenuOpen", "CFC_SpawnMenuWhitelist", function()
     hook.Remove( "OnSpawnMenuOpen", "CFC_SpawnMenuWhitelist" )
-    --if LocalPlayer():IsAdmin() then return end
+    if LocalPlayer():IsAdmin() then return end
 
     hideTabs()
     -- This extra pass ensures that all tabs are removed.
@@ -50,7 +45,7 @@ local emptyResults = function() return {} end
 local noop = function() end
 
 hook.Add( "InitPostEntity", "CFC_SpawnMenuWhitelist", function()
-    --if LocalPlayer():IsAdmin() then return end
+    if LocalPlayer():IsAdmin() then return end
 
     -- Remove NPCs from the search provider
     local _, searchProviders = debug.getupvalue( search.AddProvider, 1 )
