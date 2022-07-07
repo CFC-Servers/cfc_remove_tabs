@@ -2,7 +2,6 @@ local HIDDEN_ALPHA = 45
 local HIDDEN_COLOR = Color( 255, 255, 255, HIDDEN_ALPHA )
 
 local disabledTabs = {
-    ["#spawnmenu.category.dupes"] = true,
     ["#spawnmenu.category.saves"] = true,
     ["#spawnmenu.category.npcs"] = true
 }
@@ -42,7 +41,8 @@ hook.Add( "OnSpawnMenuOpen", "CFC_SpawnMenuWhitelist", function()
 end )
 
 local emptyResults = function() return {} end
-local noop = function() end
+local dupeError = "Workshop Dupes are disabled on this server"
+local errorSound = "buttons/button2.wav"
 
 hook.Add( "InitPostEntity", "CFC_SpawnMenuWhitelist", function()
     if LocalPlayer():IsAdmin() then return end
@@ -51,11 +51,12 @@ hook.Add( "InitPostEntity", "CFC_SpawnMenuWhitelist", function()
     local _, searchProviders = debug.getupvalue( search.AddProvider, 1 )
     searchProviders.npcs.func = emptyResults
 
-    -- Disable Dupes entirely
-    ws_dupe._Arm = ws_dupe._Arm or ws_dupe.Arm
-    ws_dupe.Arm = noop
-
+    -- Disable workshop dupes only
     ws_dupe._DownloadAndArm = ws_dupe._DownloadAndArm or ws_dupe.DownloadAndArm
-    ws_dupe.DownloadAndArm = noop
+    ws_dupe.DownloadAndArm = function()
+        if not IsValid( LocalPlayer() ) then return end
+        LocalPlayer():ChatPrint(dupeError)
+        surface.PlaySound( errorSound )
+    end
 end )
 
