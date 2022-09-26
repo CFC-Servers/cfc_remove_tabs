@@ -55,7 +55,7 @@ hook.Add( "InitPostEntity", "CFC_SpawnMenuWhitelist", function()
     ws_dupe._DownloadAndArm = ws_dupe._DownloadAndArm or ws_dupe.DownloadAndArm
     ws_dupe.DownloadAndArm = function()
         if not IsValid( LocalPlayer() ) then return end
-        LocalPlayer():ChatPrint(dupeError)
+        LocalPlayer():ChatPrint( dupeError )
         surface.PlaySound( errorSound )
     end
 end )
