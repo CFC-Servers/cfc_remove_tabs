@@ -33,6 +33,7 @@ end
 local emptyResults = function() return {} end
 local errorSound = "buttons/button2.wav"
 
+--- Rejects the action and notifies the player
 local function reject( message )
     LocalPlayer():ChatPrint( message )
     surface.PlaySound( errorSound )
@@ -40,12 +41,13 @@ local function reject( message )
     return false
 end
 
+--- Remove NPCs from the search provider
 local function adjustSearchProfiders()
-    -- Remove NPCs from the search provider
     local _, searchProviders = debug.getupvalue( search.AddProvider, 1 )
     searchProviders.npcs.func = emptyResults
 end
 
+--- Wrap the Duplicator to reject non-owner (or banned) dupes
 local function wrapDuplicator()
     ws_dupe._DownloadAndArm = ws_dupe._DownloadAndArm or ws_dupe.DownloadAndArm
 
@@ -68,11 +70,11 @@ local function wrapDuplicator()
     end
 end
 
-local function setup()
+--- Blocks NPCs and Saves from the spawn menu
+local function blockTabs()
     adjustSearchProfiders()
-    wrapDuplicator()
-
     hideTabs()
+
     hook.Add( "SpawnMenuCreated", "CFC_SpawnMenuWhitelist", function()
         hideTabs()
     end )
@@ -81,13 +83,29 @@ end
 hook.Add( "InitPostEntity", "CFC_SpawnMenuWhitelist", function()
     local me = LocalPlayer()
 
-    local shouldBlock = hook.Run( "CFC_SpawnMenuWhitelist_ShouldApply", me )
+    -- NPCs/Saves
+    do
+        local shouldBlock = hook.Run( "CFC_SpawnMenuWhitelist_ShouldBlockTabs", me )
 
-    -- Return false to allow them full access
-    if shouldBlock == false then return end
+        -- Return false to allow them full access
+        if shouldBlock == false then return end
 
-    -- If no return, then restrict the spawn menu for non-admins (default behavior)
-    if shouldBlock == nil and me:IsAdmin() then return end
+        -- If no return, then restrict the spawn menu for non-admins (default behavior)
+        if shouldBlock == nil and me:IsAdmin() then return end
 
-    setup()
+        blockTabs()
+    end
+
+    -- Duplicator
+    do
+        local shouldLimit = hook.Run( "CFC_SpawnMenuWhitelist_ShouldLimitDupes", me )
+
+        -- Return false to allow them full access
+        if shouldLimit == false then return end
+
+        -- If no return, then limit dupes for non-admins (default behavior)
+        if shouldLimit == nil and me:IsAdmin() then return end
+
+        wrapDuplicator()
+    end
 end )
