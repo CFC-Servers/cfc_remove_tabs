@@ -30,11 +30,6 @@ local function hideTabs()
     end
 end
 
-hook.Add( "SpawnMenuCreated", "CFC_SpawnMenuWhitelist", function()
-    if LocalPlayer():IsAdmin() then return end
-    hideTabs()
-end )
-
 local emptyResults = function() return {} end
 local errorSound = "buttons/button2.wav"
 
@@ -54,7 +49,7 @@ end
 local function wrapDuplicator()
     ws_dupe._DownloadAndArm = ws_dupe._DownloadAndArm or ws_dupe.DownloadAndArm
 
-    ws_dupe.DownloadAndArm = function( id )
+    ws_dupe.DownloadAndArm = function( self, id )
         -- Exploit fix?
         if not IsValid( LocalPlayer() ) then return end
 
@@ -68,15 +63,31 @@ local function wrapDuplicator()
                 return reject( "ERROR: You can only spawn your own Dupes!" )
             end
 
-            return ws_dupe._DownloadAndArm( id )
+            return ws_dupe._DownloadAndArm( self, id )
         end )
     end
 end
 
-hook.Add( "InitPostEntity", "CFC_SpawnMenuWhitelist", function()
-    if LocalPlayer():IsAdmin() then return end
-
+local function setup()
     adjustSearchProfiders()
     wrapDuplicator()
-end )
 
+    hideTabs()
+    hook.Add( "SpawnMenuCreated", "CFC_SpawnMenuWhitelist", function()
+        hideTabs()
+    end )
+end
+
+hook.Add( "InitPostEntity", "CFC_SpawnMenuWhitelist", function()
+    local me = LocalPlayer()
+
+    local shouldBlock = hook.Run( "CFC_SpawnMenuWhitelist_ShouldApply", me )
+
+    -- Return false to allow them full access
+    if shouldBlock == false then return end
+
+    -- If no return, then restrict the spawn menu for non-admins (default behavior)
+    if shouldBlock == nil and me:IsAdmin() then return end
+
+    setup()
+end )
