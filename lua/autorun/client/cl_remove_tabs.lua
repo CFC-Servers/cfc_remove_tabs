@@ -30,33 +30,53 @@ local function hideTabs()
     end
 end
 
-hook.Add( "OnSpawnMenuOpen", "CFC_SpawnMenuWhitelist", function()
-    hook.Remove( "OnSpawnMenuOpen", "CFC_SpawnMenuWhitelist" )
+hook.Add( "SpawnMenuCreated", "CFC_SpawnMenuWhitelist", function()
     if LocalPlayer():IsAdmin() then return end
-
     hideTabs()
-    -- This extra pass ensures that all tabs are removed.
-    -- The Saves tab seems to be loaded in async so it wouldn't disappear until the second menu load
-    timer.Simple( 0, hideTabs )
 end )
 
 local emptyResults = function() return {} end
-local dupeError = "Workshop Dupes are disabled on this server"
 local errorSound = "buttons/button2.wav"
+
+local function reject( message )
+    LocalPlayer():ChatPrint( message )
+    surface.PlaySound( errorSound )
+
+    return false
+end
+
+local function adjustSearchProfiders()
+    -- Remove NPCs from the search provider
+    local _, searchProviders = debug.getupvalue( search.AddProvider, 1 )
+    searchProviders.npcs.func = emptyResults
+end
+
+local function wrapDuplicator()
+    ws_dupe._DownloadAndArm = ws_dupe._DownloadAndArm or ws_dupe.DownloadAndArm
+
+    ws_dupe.DownloadAndArm = function( id )
+        -- Exploit fix?
+        if not IsValid( LocalPlayer() ) then return end
+
+        -- Reject banned or non-owner dupes
+        steamworks.FileInfo( id, function( result )
+            local banned = result.banned
+            if banned then return reject( "ERROR: Unable to spawn banned workshop items!" ) end
+
+            local ownerSteamID64 = result.owner
+            if ownerSteamID64 ~= LocalPlayer():SteamID64() then
+                return reject( "ERROR: You can only spawn your own Dupes!" )
+            end
+
+            return ws_dupe._DownloadAndArm( id )
+        end )
+    end
+end
 
 hook.Add( "InitPostEntity", "CFC_SpawnMenuWhitelist", function()
     if LocalPlayer():IsAdmin() then return end
 
-    -- Remove NPCs from the search provider
-    local _, searchProviders = debug.getupvalue( search.AddProvider, 1 )
-    searchProviders.npcs.func = emptyResults
-
-    -- Disable workshop dupes only
-    ws_dupe._DownloadAndArm = ws_dupe._DownloadAndArm or ws_dupe.DownloadAndArm
-    ws_dupe.DownloadAndArm = function()
-        if not IsValid( LocalPlayer() ) then return end
-        LocalPlayer():ChatPrint( dupeError )
-        surface.PlaySound( errorSound )
-    end
+    adjustSearchProfiders()
+    wrapDuplicator()
 end )
 
