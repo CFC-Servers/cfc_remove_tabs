@@ -72,12 +72,12 @@ local function hideCommonTabs()
     hideTab( "#spawnmenu.category.postprocess" )
 end
 
-hook.Add( "InitPostEntity", "CFC_RemoveTabs", function()
+local function setup()
     local me = LocalPlayer()
     local isAdmin = me:IsAdmin()
 
     -- Always block common tabs from non-admins
-    if isAdmin then
+    if not isAdmin then
         hideCommonTabs()
         hook.Add( "SpawnMenuCreated", "CFC_RemoveTabs_HideCommonTabs", hideCommonTabs )
     end
@@ -111,4 +111,6 @@ hook.Add( "InitPostEntity", "CFC_RemoveTabs", function()
 
         wrapDuplicator()
     end
-end )
+end
+
+hook.Add( "InitPostEntity", "CFC_RemoveTabs", setup )
