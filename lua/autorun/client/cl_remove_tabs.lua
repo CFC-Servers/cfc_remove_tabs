@@ -69,7 +69,6 @@ end
 --- Hides the Saves and Post-Processing tabs
 local function hideCommonTabs()
     hideTab( "#spawnmenu.category.saves" )
-    hideTab( "#spawnmenu.category.postprocess" )
 end
 
 local function setup()
